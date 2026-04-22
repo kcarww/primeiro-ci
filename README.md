@@ -258,3 +258,6 @@ Se os testes de integração falharem:
 - **Arquivos de teste**: 6 arquivos
 - **Casos de teste**: 50+ testes
 - **Endpoints**: 6 endpoints REST
+
+
+# Endfile
