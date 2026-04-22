@@ -14,11 +14,15 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ROOT_PASSWORD: password
           MYSQL_DATABASE: clientes_db
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -ppassword --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
     
     steps:
       - name: Checkout code
@@ -44,10 +48,16 @@ jobs:
 
       - name: Wait for MySQL
         run: |
-          until mysqladmin ping -h "localhost" --silent; do
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u root -ppassword --silent; then
+              echo "MySQL is available."
+              exit 0
+            fi
             echo "Waiting for MySQL to be available..."
             sleep 5
           done
+          echo "MySQL did not become available in time."
+          exit 1
       
       - name: Set up test database
         run: |
@@ -59,7 +69,7 @@ jobs:
           DATABASE_USER: root
           DATABASE_PASSWORD: password
           DATABASE_NAME: clientes_db
-          DATABASE_TEST_NAME: clientes_db_test
+          TEST_DATABASE_NAME: clientes_db_test
         run: |
           pytest --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=80
 
